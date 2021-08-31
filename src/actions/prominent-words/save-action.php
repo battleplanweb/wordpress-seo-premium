@@ -12,7 +12,7 @@ use Yoast\WP\SEO\Repositories\Indexable_Repository;
 /**
  * Action for linking a list of prominent words to an indexable.
  *
- * @see \Yoast\WP\SEO\Routes\Prominent_Words_Route;
+ * @see \Yoast\WP\SEO\Premium\Routes\Prominent_Words_Route;
  */
 class Save_Action {
 

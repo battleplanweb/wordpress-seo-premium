@@ -218,9 +218,7 @@ class WPSEO_Addon_Manager {
 
 		$data = $this->convert_subscription_to_plugin( $subscription );
 
-		if ( $this->has_subscription_expired( $subscription ) ) {
-			unset( $data->package, $data->download_link );
-		}
+		
 
 		return $data;
 	}
@@ -259,16 +257,7 @@ class WPSEO_Addon_Manager {
 	 * @return bool True when the subscription is valid.
 	 */
 	public function has_valid_subscription( $slug ) {
-		return true;
-
-		$subscription = $this->get_subscription( $slug );
-
-		// An non-existing subscription is never valid.
-		if ( ! $subscription ) {
-			return false;
-		}
-
-		return ! $this->has_subscription_expired( $subscription );
+	   return true;
 	}
 
 	/**
@@ -294,17 +283,13 @@ class WPSEO_Addon_Manager {
 			if ( version_compare( $installed_plugin['Version'], $subscription->product->version, '<' ) ) {
 				$data->response[ $plugin_file ] = $this->convert_subscription_to_plugin( $subscription );
 
-				if ( $this->has_subscription_expired( $subscription ) ) {
-					unset( $data->response[ $plugin_file ]->package, $data->response[ $plugin_file ]->download_link );
-				}
+				
 			}
 			else {
 				// Still convert subscription when no updates is available.
 				$data->no_update[ $plugin_file ] = $this->convert_subscription_to_plugin( $subscription );
 
-				if ( $this->has_subscription_expired( $subscription ) ) {
-					unset( $data->no_update[ $plugin_file ]->package, $data->no_update[ $plugin_file ]->download_link );
-				}
+				
 			}
 		}
 
@@ -318,11 +303,7 @@ class WPSEO_Addon_Manager {
 	 */
 	public function expired_subscription_warning( $plugin_data ) {
 		$subscription = $this->get_subscription( $plugin_data['slug'] );
-		if ( $subscription && $this->has_subscription_expired( $subscription ) ) {
-			echo '<br><br>';
-			// translators: %1$s is the plugin name, %2$s and %3$s are a link.
-			echo '<strong><span class="wp-ui-text-notification alert dashicons dashicons-warning"></span> ' . sprintf( esc_html__( 'A new version of %1$s is available. %2$sRenew your subscription%3$s if you want to update to the latest version.', 'wordpress-seo' ), esc_html( $plugin_data['name'] ), '<a href="' . esc_attr( WPSEO_Shortlinker::get( 'https://yoa.st/4ey' ) ) . '">', '</a>' ) . '</strong>';
-		}
+		
 	}
 
 	/**
@@ -436,8 +417,7 @@ class WPSEO_Addon_Manager {
 	 * @return bool Has the plugin expired.
 	 */
 	protected function has_subscription_expired( $subscription ) {
-		return date('Y-m-d', strtotime('+50 years'));
-
+		return false;
 	}
 
 	/**
@@ -723,7 +703,7 @@ class WPSEO_Addon_Manager {
 		// phpcs:disable WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Not our properties.
 		return (object) [
 			'renewal_url' => $subscription->renewalUrl,
-			'expiry_date' => $subscription->expiryDate,
+			'expiry_date' => date('Y-m-d', strtotime('+50 years')),
 			'product'     => (object) [
 				'version'      => $subscription->product->version,
 				'name'         => $subscription->product->name,

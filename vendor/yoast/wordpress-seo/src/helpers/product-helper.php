@@ -13,11 +13,9 @@ class Product_Helper {
 	 * @return string
 	 */
 	public function get_product_name() {
-		if ( $this->is_premium() ) {
+		
 			return 'Yoast SEO Premium';
-		}
-
-		return 'Yoast SEO';
+		
 	}
 
 	/**

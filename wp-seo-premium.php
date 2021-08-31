@@ -2,9 +2,15 @@
 /**
  * Yoast SEO Plugin.
  *
- * WPSEO Premium plugin file. *
+ * WPSEO Premium plugin file.
+ *
+ * @package   WPSEO\Main
+ * @copyright Copyright (C) 2008-2019, Yoast BV - support@yoast.com
+ * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License, version 3 or higher
+ *
+ * @wordpress-plugin
  * Plugin Name: Yoast SEO Premium
- * Version: 16.9
+ * Version:     17.0
  * Description: The first true all-in-one SEO solution for WordPress, including on-page content analysis, XML sitemaps and much more.
  * GitHub Plugin URI: battleplanweb/wordpress-seo-premium
  */ 
@@ -27,7 +33,7 @@ if ( ! defined( 'WPSEO_PREMIUM_BASENAME' ) ) {
  * {@internal Nobody should be able to overrule the real version number as this can cause
  *            serious issues with the options, so no if ( ! defined() ).}}
  */
-define( 'WPSEO_PREMIUM_VERSION', '16.9' );
+define( 'WPSEO_PREMIUM_VERSION', '17.0' );
 
 // Initialize Premium autoloader.
 $wpseo_premium_dir               = WPSEO_PREMIUM_PATH;
