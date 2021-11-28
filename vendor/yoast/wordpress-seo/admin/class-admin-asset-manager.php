@@ -299,7 +299,7 @@ class WPSEO_Admin_Asset_Manager {
 			'name'      => 'post-edit-classic',
 			'src'       => $scripts['post-edit']['src'],
 			'deps'      => array_map(
-				function( $dep ) {
+				static function( $dep ) {
 					if ( $dep === self::PREFIX . 'block-editor' ) {
 						return self::PREFIX . 'classic-editor';
 					}
@@ -359,9 +359,9 @@ class WPSEO_Admin_Asset_Manager {
 		$scripts = [];
 		$assets  = require $args['asset_file'];
 		foreach ( $assets as $file => $data ) {
-			$name = substr( $file, 0, -$args['ext_length'] );
-			$name = strtolower( preg_replace( '/([A-Z])/', '-$1', $name ) );
-			$name = $name . $args['suffix'];
+			$name  = substr( $file, 0, -$args['ext_length'] );
+			$name  = strtolower( preg_replace( '/([A-Z])/', '-$1', $name ) );
+			$name .= $args['suffix'];
 
 			$deps = $data['dependencies'];
 			if ( isset( $args['additional_deps'][ $name ] ) ) {
@@ -418,7 +418,7 @@ class WPSEO_Admin_Asset_Manager {
 			'deps'    => [
 				'jquery',
 			],
-			'version' => '4.0.3',
+			'version' => '4.1.0-rc.0',
 		];
 		$scripts['select2-translations'] = [
 			'name'    => 'select2-translations',
@@ -427,7 +427,7 @@ class WPSEO_Admin_Asset_Manager {
 				'jquery',
 				self::PREFIX . 'select2-core',
 			],
-			'version' => '4.0.3',
+			'version' => '4.1.0-rc.0',
 		];
 
 		return $scripts;
@@ -552,7 +552,7 @@ class WPSEO_Admin_Asset_Manager {
 				'name'    => 'select2',
 				'src'     => 'select2/select2',
 				'suffix'  => '.min',
-				'version' => '4.0.1',
+				'version' => '4.1.0-rc.0',
 				'rtl'     => false,
 			],
 			[
