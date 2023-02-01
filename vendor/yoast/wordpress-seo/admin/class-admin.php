@@ -5,6 +5,9 @@
  * @package WPSEO\Admin
  */
 
+use Yoast\WP\SEO\Helpers\Wordpress_Helper;
+use Yoast\WP\SEO\Integrations\Settings_Integration;
+
 /**
  * Class that holds most of the admin functionality for Yoast SEO.
  */
@@ -73,12 +76,6 @@ class WPSEO_Admin {
 
 		if ( YoastSEO()->helpers->current_page->is_yoast_seo_page() ) {
 			add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
-		}
-
-		if ( WPSEO_Utils::is_api_available() ) {
-			$configuration = new WPSEO_Configuration_Page();
-			$configuration->set_hooks();
-			$configuration->catch_configuration_request();
 		}
 
 		$this->set_upsell_notice();
@@ -170,7 +167,7 @@ class WPSEO_Admin {
 		// phpcs:ignore WordPress.Security -- The variable is only used in strpos and thus safe to not unslash or sanitize.
 		$option_page = ! empty( $_POST['option_page'] ) ? $_POST['option_page'] : '';
 
-		if ( strpos( $option_page, 'yoast_wpseo' ) === 0 ) {
+		if ( strpos( $option_page, 'yoast_wpseo' ) === 0 || strpos( $option_page, Settings_Integration::PAGE ) === 0 ) {
 			add_filter( 'option_page_capability_' . $option_page, [ $this, 'get_manage_options_cap' ] );
 		}
 	}
@@ -255,7 +252,7 @@ class WPSEO_Admin {
 		}
 
 		// Add link to premium landing page.
-		$premium_link = '<a style="font-weight: bold;" href="' . esc_url( WPSEO_Shortlinker::get( 'https://yoa.st/1yb' ) ) . '" target="_blank">' . __( 'Get Premium', 'wordpress-seo' ) . '</a>';
+		$premium_link = '<a style="font-weight: bold;" href="' . esc_url( WPSEO_Shortlinker::get( 'https://yoa.st/1yb' ) ) . '" target="_blank" data-action="load-nfd-ctb" data-ctb-id="57d6a568-783c-45e2-a388-847cff155897">' . __( 'Get Premium', 'wordpress-seo' ) . '</a>';
 		array_unshift( $links, $premium_link );
 
 		return $links;
@@ -306,7 +303,17 @@ class WPSEO_Admin {
 	 * Log the updated timestamp for user profiles when theme is changed.
 	 */
 	public function switch_theme() {
-		$users = get_users( [ 'who' => 'authors' ] );
+		$wordpress_helper  = new Wordpress_Helper();
+		$wordpress_version = $wordpress_helper->get_wordpress_version();
+
+		// Capability queries were only introduced in WP 5.9.
+		if ( version_compare( $wordpress_version, '5.8.99', '<' ) ) {
+			$users = get_users( [ 'who' => 'authors' ] );
+		}
+		else {
+			$users = get_users( [ 'capability' => [ 'edit_posts' ] ] );
+		}
+
 		if ( is_array( $users ) && $users !== [] ) {
 			foreach ( $users as $user ) {
 				update_user_meta( $user->ID, '_yoast_wpseo_profile_updated', time() );
@@ -320,18 +327,22 @@ class WPSEO_Admin {
 	 * @return array
 	 */
 	private function localize_admin_global_script() {
-		return [
-			'isRtl'                   => is_rtl(),
-			'variable_warning'        => sprintf(
-				/* translators: %1$s: '%%term_title%%' variable used in titles and meta's template that's not compatible with the given template, %2$s: expands to 'HelpScout beacon' */
-				__( 'Warning: the variable %1$s cannot be used in this template. See the %2$s for more info.', 'wordpress-seo' ),
-				'<code>%s</code>',
-				'HelpScout beacon'
-			),
-			/* translators: %s: expends to Yoast SEO */
-			'help_video_iframe_title' => sprintf( __( '%s video tutorial', 'wordpress-seo' ), 'Yoast SEO' ),
-			'scrollable_table_hint'   => __( 'Scroll to see the table content.', 'wordpress-seo' ),
-		];
+		return array_merge(
+			[
+				'isRtl'                   => is_rtl(),
+				'variable_warning'        => sprintf(
+					/* translators: %1$s: '%%term_title%%' variable used in titles and meta's template that's not compatible with the given template, %2$s: expands to 'HelpScout beacon' */
+					__( 'Warning: the variable %1$s cannot be used in this template. See the %2$s for more info.', 'wordpress-seo' ),
+					'<code>%s</code>',
+					'HelpScout beacon'
+				),
+				/* translators: %s: expends to Yoast SEO */
+				'help_video_iframe_title' => sprintf( __( '%s video tutorial', 'wordpress-seo' ), 'Yoast SEO' ),
+				'scrollable_table_hint'   => __( 'Scroll to see the table content.', 'wordpress-seo' ),
+				'wincher_is_logged_in'    => WPSEO_Options::get( 'wincher_integration_active', true ) ? YoastSEO()->helpers->wincher->login_status() : false,
+			],
+			YoastSEO()->helpers->wincher->get_admin_global_links()
+		);
 	}
 
 	/**

@@ -1,20 +1,34 @@
 <?php
-/*
-* Yoast SEO Plugin.
+/**
+ * Yoast SEO Plugin.
  *
  * WPSEO Premium plugin file.
  *
  * @package   WPSEO\Main
- * @copyright Copyright (C) 2008-2019, Yoast BV - support@yoast.com
+ * @copyright Copyright (C) 2008-2022, Yoast BV - support@yoast.com
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License, version 3 or higher
  *
  * @wordpress-plugin
  * Plugin Name: Yoast SEO Premium
- * Version:     17.6
+ * Version:     20.0
+ * Plugin URI:  https://yoa.st/2jc
  * Description: The first true all-in-one SEO solution for WordPress, including on-page content analysis, XML sitemaps and much more.
+ * Author:      Team Yoast
+ * Author URI:  https://yoa.st/2jc
+ * Text Domain: wordpress-seo-premium
+ * Domain Path: /languages/
+ * License:     GPL v3
+ * Requires at least: 6.0
+ * Requires PHP: 5.6.20
+ *
+ * WC requires at least: 3.0
+ * WC tested up to: 7.3
+ *
  * GitHub Plugin URI: battleplanweb/wordpress-seo-premium
- */ 
- 
+ */
+
+use Yoast\WP\SEO\Premium\Addon_Installer;
+
 $site_information = get_transient( 'wpseo_site_information' );
 if ( isset( $site_information->subscriptions ) && ( count( $site_information->subscriptions ) == 0 ) ) {
 delete_transient( 'wpseo_site_information' );
@@ -58,8 +72,6 @@ return $pre;
 }
 }, 10, 3 );
 
-use Yoast\WP\SEO\Premium\Addon_Installer;
-
 if ( ! defined( 'WPSEO_PREMIUM_FILE' ) ) {
 	define( 'WPSEO_PREMIUM_FILE', __FILE__ );
 }
@@ -76,7 +88,7 @@ if ( ! defined( 'WPSEO_PREMIUM_BASENAME' ) ) {
  * {@internal Nobody should be able to overrule the real version number as this can cause
  *            serious issues with the options, so no if ( ! defined() ).}}
  */
-define( 'WPSEO_PREMIUM_VERSION', '17.6' );
+define( 'WPSEO_PREMIUM_VERSION', '20.0' );
 
 // Initialize Premium autoloader.
 $wpseo_premium_dir               = WPSEO_PREMIUM_PATH;

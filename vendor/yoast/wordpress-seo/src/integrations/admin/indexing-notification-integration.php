@@ -4,6 +4,8 @@ namespace Yoast\WP\SEO\Integrations\Admin;
 
 use WPSEO_Addon_Manager;
 use Yoast\WP\SEO\Conditionals\Admin_Conditional;
+use Yoast\WP\SEO\Conditionals\Not_Admin_Ajax_Conditional;
+use Yoast\WP\SEO\Conditionals\User_Can_Manage_Wpseo_Options_Conditional;
 use Yoast\WP\SEO\Config\Indexing_Reasons;
 use Yoast\WP\SEO\Helpers\Current_Page_Helper;
 use Yoast\WP\SEO\Helpers\Environment_Helper;
@@ -28,41 +30,6 @@ class Indexing_Notification_Integration implements Integration_Interface {
 	 * The notification ID.
 	 */
 	const NOTIFICATION_ID = 'wpseo-reindex';
-
-	/**
-	 * Represents the reason that the indexing process failed and should be tried again.
-	 *
-	 * @deprecated 15.3
-	 */
-	const REASON_INDEXING_FAILED = Indexing_Reasons::REASON_INDEXING_FAILED;
-
-	/**
-	 * Represents the reason that the permalink settings are changed.
-	 *
-	 * @deprecated 15.3
-	 */
-	const REASON_PERMALINK_SETTINGS = Indexing_Reasons::REASON_PERMALINK_SETTINGS;
-
-	/**
-	 * Represents the reason that the category base is changed.
-	 *
-	 * @deprecated 15.3
-	 */
-	const REASON_CATEGORY_BASE_PREFIX = Indexing_Reasons::REASON_CATEGORY_BASE_PREFIX;
-
-	/**
-	 * Represents the reason that the tag base is changed.
-	 *
-	 * @deprecated 15.3
-	 */
-	const REASON_TAG_BASE_PREFIX = Indexing_Reasons::REASON_TAG_BASE_PREFIX;
-
-	/**
-	 * Represents the reason that the home url option is changed.
-	 *
-	 * @deprecated 15.3
-	 */
-	const REASON_HOME_URL_OPTION = Indexing_Reasons::REASON_HOME_URL_OPTION;
 
 	/**
 	 * The Yoast notification center.
@@ -179,6 +146,8 @@ class Indexing_Notification_Integration implements Integration_Interface {
 	public static function get_conditionals() {
 		return [
 			Admin_Conditional::class,
+			Not_Admin_Ajax_Conditional::class,
+			User_Can_Manage_Wpseo_Options_Conditional::class,
 		];
 	}
 

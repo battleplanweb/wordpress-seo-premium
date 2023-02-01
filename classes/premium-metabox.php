@@ -1,4 +1,4 @@
-<?php // phpcs:ignore Yoast.Files.FileName.InvalidClassFileName
+<?php
 /**
  * WPSEO Premium plugin file.
  *
@@ -67,8 +67,10 @@ class WPSEO_Premium_Metabox implements WPSEO_WordPress_Integration {
 	public static function are_content_endpoints_available() {
 		if ( function_exists( 'rest_get_server' ) ) {
 			$namespaces = rest_get_server()->get_namespaces();
+
 			return in_array( 'wp/v2', $namespaces, true );
 		}
+
 		return false;
 	}
 
@@ -102,9 +104,6 @@ class WPSEO_Premium_Metabox implements WPSEO_WordPress_Integration {
 		wp_enqueue_script( WPSEO_Admin_Asset_Manager::PREFIX . 'premium-metabox' );
 		wp_enqueue_style( WPSEO_Admin_Asset_Manager::PREFIX . 'premium-metabox' );
 
-		$localization = new WPSEO_Admin_Asset_Yoast_Components_L10n();
-		$localization->localize_script( WPSEO_Admin_Asset_Manager::PREFIX . 'premium-metabox' );
-
 		$premium_localization = new WPSEO_Premium_Asset_JS_L10n();
 		$premium_localization->localize_script( WPSEO_Admin_Asset_Manager::PREFIX . 'premium-metabox' );
 
@@ -117,15 +116,33 @@ class WPSEO_Premium_Metabox implements WPSEO_WordPress_Integration {
 	 * @return void
 	 */
 	public function send_data_to_assets() {
-		$analysis_seo = new WPSEO_Metabox_Analysis_SEO();
+		$analysis_seo     = new WPSEO_Metabox_Analysis_SEO();
+		$content_analysis = new WPSEO_Metabox_Analysis_Readability();
+		$assets_manager   = new WPSEO_Admin_Asset_Manager();
 
 		$data = [
-			'restApi'            => $this->get_rest_api_config(),
-			'seoAnalysisEnabled' => $analysis_seo->is_enabled(),
-			'licensedURL'        => WPSEO_Utils::get_home_url(),
-			'settingsPageUrl'    => admin_url( 'admin.php?page=wpseo_dashboard#top#features' ),
-			'integrationsTabURL' => admin_url( 'admin.php?page=wpseo_dashboard#top#integrations' ),
+			'restApi'                         => $this->get_rest_api_config(),
+			'seoAnalysisEnabled'              => $analysis_seo->is_enabled(),
+			'contentAnalysisEnabled'          => $content_analysis->is_enabled(),
+			'licensedURL'                     => WPSEO_Utils::get_home_url(),
+			'settingsPageUrl'                 => admin_url( 'admin.php?page=wpseo_page_settings#/site-features#card-wpseo-enable_link_suggestions' ),
+			'integrationsTabURL'              => admin_url( 'admin.php?page=wpseo_integrations' ),
+			'commonsScriptUrl'                => \plugins_url(
+				'assets/js/dist/commons-premium-' . $assets_manager->flatten_version( WPSEO_PREMIUM_VERSION ) . WPSEO_CSSJS_SUFFIX . '.js',
+				WPSEO_PREMIUM_FILE
+			),
+			'premiumAssessmentsScriptUrl'     => \plugins_url(
+				'assets/js/dist/register-premium-assessments-' . $assets_manager->flatten_version( WPSEO_PREMIUM_VERSION ) . WPSEO_CSSJS_SUFFIX . '.js',
+				WPSEO_PREMIUM_FILE
+			),
 		];
+
+		if ( \defined( 'YOAST_SEO_TEXT_FORMALITY' ) && YOAST_SEO_TEXT_FORMALITY === true ) {
+			$data['textFormalityScriptUrl'] = \plugins_url(
+				'assets/js/dist/register-text-formality-' . $assets_manager->flatten_version( WPSEO_PREMIUM_VERSION ) . WPSEO_CSSJS_SUFFIX . '.js',
+				WPSEO_PREMIUM_FILE
+			);
+		}
 
 		if ( WPSEO_Metabox::is_post_edit( $this->get_current_page() ) ) {
 			$data = array_merge( $data, $this->get_post_metabox_config() );
@@ -148,27 +165,26 @@ class WPSEO_Premium_Metabox implements WPSEO_WordPress_Integration {
 	 * @return array The config.
 	 */
 	protected function get_post_metabox_config() {
-		$insights_enabled         = WPSEO_Options::get( 'enable_metabox_insights', false );
 		$link_suggestions_enabled = WPSEO_Options::get( 'enable_link_suggestions', false );
 
 		$post = $this->get_post();
 
-		$prominent_words_support = new WPSEO_Premium_Prominent_Words_Support();
-		if ( ! $prominent_words_support->is_post_type_supported( $post->post_type ) ) {
-			$insights_enabled = false;
-		}
+		$prominent_words_support      = new WPSEO_Premium_Prominent_Words_Support();
+		$is_prominent_words_available = $prominent_words_support->is_post_type_supported( $post->post_type );
 
 		$site_locale = \get_locale();
 		$language    = WPSEO_Language_Utils::get_language( $site_locale );
 
+
 		return [
-			'insightsEnabled'             => ( $insights_enabled ) ? 'enabled' : 'disabled',
-			'currentObjectId'             => $this->get_post_ID(),
-			'currentObjectType'           => 'post',
-			'linkSuggestionsEnabled'      => ( $link_suggestions_enabled ) ? 'enabled' : 'disabled',
-			'linkSuggestionsAvailable'    => $prominent_words_support->is_post_type_supported( $post->post_type ),
-			'linkSuggestionsUnindexed'    => ! $this->is_prominent_words_indexing_completed() && WPSEO_Capability_Utils::current_user_can( 'wpseo_manage_options' ),
-			'perIndexableLimit'           => $this->per_indexable_limit( $language ),
+			'currentObjectId'                 => $this->get_post_ID(),
+			'currentObjectType'               => 'post',
+			'linkSuggestionsEnabled'          => ( $link_suggestions_enabled ) ? 'enabled' : 'disabled',
+			'linkSuggestionsAvailable'        => $is_prominent_words_available,
+			'linkSuggestionsUnindexed'        => ! $this->is_prominent_words_indexing_completed() && WPSEO_Capability_Utils::current_user_can( 'wpseo_manage_options' ),
+			'perIndexableLimit'               => $this->per_indexable_limit( $language ),
+			'isProminentWordsAvailable'       => $is_prominent_words_available,
+			'isTitleAssessmentAvailable'      => true,
 		];
 	}
 
@@ -193,24 +209,22 @@ class WPSEO_Premium_Metabox implements WPSEO_WordPress_Integration {
 		}
 
 		$link_suggestions_enabled = WPSEO_Options::get( 'enable_link_suggestions', false );
-		$insights_enabled         = WPSEO_Options::get( 'enable_metabox_insights', false );
 
-		$prominent_words_support = new WPSEO_Premium_Prominent_Words_Support();
-		if ( ! $prominent_words_support->is_taxonomy_supported( $term->taxonomy ) ) {
-			$insights_enabled = false;
-		}
+		$prominent_words_support      = new WPSEO_Premium_Prominent_Words_Support();
+		$is_prominent_words_available = $prominent_words_support->is_taxonomy_supported( $term->taxonomy );
 
 		$site_locale = \get_locale();
 		$language    = WPSEO_Language_Utils::get_language( $site_locale );
 
 		return [
-			'insightsEnabled'             => ( $insights_enabled ) ? 'enabled' : 'disabled',
-			'currentObjectId'             => $term->term_id,
-			'currentObjectType'           => 'term',
-			'linkSuggestionsEnabled'      => ( $link_suggestions_enabled ) ? 'enabled' : 'disabled',
-			'linkSuggestionsAvailable'    => $prominent_words_support->is_taxonomy_supported( $term->taxonomy ),
-			'linkSuggestionsUnindexed'    => ! $this->is_prominent_words_indexing_completed() && WPSEO_Capability_Utils::current_user_can( 'wpseo_manage_options' ),
-			'perIndexableLimit'           => $this->per_indexable_limit( $language ),
+			'currentObjectId'            => $term->term_id,
+			'currentObjectType'          => 'term',
+			'linkSuggestionsEnabled'     => ( $link_suggestions_enabled ) ? 'enabled' : 'disabled',
+			'linkSuggestionsAvailable'   => $is_prominent_words_available,
+			'linkSuggestionsUnindexed'   => ! $this->is_prominent_words_indexing_completed() && WPSEO_Capability_Utils::current_user_can( 'wpseo_manage_options' ),
+			'perIndexableLimit'          => $this->per_indexable_limit( $language ),
+			'isProminentWordsAvailable'  => $is_prominent_words_available,
+			'isTitleAssessmentAvailable' => false,
 		];
 	}
 
@@ -302,7 +316,8 @@ class WPSEO_Premium_Metabox implements WPSEO_WordPress_Integration {
 	 * @return string The post type.
 	 */
 	protected function get_current_post_type() {
-		$post = filter_input( INPUT_GET, 'post', FILTER_SANITIZE_STRING );
+		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- This deprecation will be addressed later.
+		$post = filter_input( INPUT_GET, 'post', @FILTER_SANITIZE_STRING );
 
 		if ( $post ) {
 			return get_post_type( get_post( $post ) );
@@ -311,7 +326,7 @@ class WPSEO_Premium_Metabox implements WPSEO_WordPress_Integration {
 		return filter_input(
 			INPUT_GET,
 			'post_type',
-			FILTER_SANITIZE_STRING,
+			@FILTER_SANITIZE_STRING, // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- This deprecation will be addressed later.
 			[
 				'options' => [
 					'default' => 'post',

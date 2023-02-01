@@ -20,12 +20,27 @@ echo '<h3>' . esc_html( sprintf( __( 'Single %s settings', 'wordpress-seo' ), $w
 require __DIR__ . '/post_type/post-type.php';
 
 /**
+ * WARNING: This hook is intended for internal use only.
+ * Don't use it in your code as it will be removed shortly.
+ */
+// phpcs:ignore Yoast.NamingConventions.ValidHookName.MaxExceeded -- Added _internal suffix for clarity.
+do_action( 'Yoast\WP\SEO\admin_post_types_beforearchive_internal', $yform, $wpseo_post_type->name );
+
+/**
  * Allow adding custom fields to the admin meta page, just before the archive settings - Content Types tab.
+ *
+ * @deprecated 19.10 No replacement available.
  *
  * @param Yoast_Form $yform The Yoast_Form object.
  * @param string     $name  The post type name.
  */
-do_action( 'Yoast\WP\SEO\admin_post_types_beforearchive', $yform, $wpseo_post_type->name );
+do_action_deprecated(
+	'Yoast\WP\SEO\admin_post_types_beforearchive',
+	[ $yform, $wpseo_post_type->name ],
+	'19.10',
+	'',
+	'This action is going away with no replacement. If you want to add settings that interact with Yoast SEO, please create your own settings page.'
+);
 
 if ( $wpseo_post_type->name === 'product' && YoastSEO()->helpers->woocommerce->is_active() ) {
 	require __DIR__ . '/post_type/woocommerce-shop-page.php';
@@ -35,6 +50,8 @@ if ( $wpseo_post_type->name === 'product' && YoastSEO()->helpers->woocommerce->i
 
 if ( WPSEO_Post_Type::has_archive( $wpseo_post_type ) ) {
 	$plural_label = $wpseo_post_type->labels->name;
+	$archive_url  = get_post_type_archive_link( $wpseo_post_type->name );
+	$label        = '<a href="' . esc_url( $archive_url ) . '">' . esc_html( $plural_label ) . '</a>';
 
 	/* translators: %s is the plural version of the post type's name. */
 	echo '<h3>' . esc_html( sprintf( __( '%s archive settings', 'wordpress-seo' ), $plural_label ) ) . '</h3>';
@@ -46,9 +63,9 @@ if ( WPSEO_Post_Type::has_archive( $wpseo_post_type ) ) {
 	$yform->index_switch(
 		'noindex-ptarchive-' . $wpseo_post_type->name,
 		sprintf(
-			/* translators: %s expands to the post type's name. */
-			__( 'the archive for %s', 'wordpress-seo' ),
-			$plural_label
+			/* translators: %s expands to the post type's name with a link to the archive. */
+			esc_html__( 'the archive for %s', 'wordpress-seo' ),
+			$label
 		),
 		$custom_post_type_archive_help->get_button_html() . $custom_post_type_archive_help->get_panel_html()
 	);
@@ -82,25 +99,25 @@ if ( WPSEO_Post_Type::has_archive( $wpseo_post_type ) ) {
 	}
 
 	/**
+	 * WARNING: This hook is intended for internal use only.
+	 * Don't use it in your code as it will be removed shortly.
+	 */
+	// phpcs:ignore Yoast.NamingConventions.ValidHookName.MaxExceeded -- Added _internal suffix for clarity.
+	do_action( 'Yoast\WP\SEO\admin_post_types_archive_internal', $yform, $wpseo_post_type->name );
+
+	/**
 	 * Allow adding custom fields to the admin meta page at the end of the archive settings for a post type - Content Types tab.
+	 *
+	 * @deprecated 19.10 No replacement available.
 	 *
 	 * @param Yoast_Form $yform The Yoast_Form object.
 	 * @param string     $name  The post type name.
 	 */
-	do_action( 'Yoast\WP\SEO\admin_post_types_archive', $yform, $wpseo_post_type->name );
+	do_action_deprecated(
+		'Yoast\WP\SEO\admin_post_types_archive',
+		[ $yform, $wpseo_post_type->name ],
+		'19.10',
+		'',
+		'This action is going away with no replacement. If you want to add settings that interact with Yoast SEO, please create your own settings page.'
+	);
 }
-
-/**
- * Allow adding a custom checkboxes to the admin meta page - Post Types tab.
- *
- * @deprecated 16.3 Use the {@see 'Yoast\WP\SEO\admin_post_types_beforearchive'} action instead.
- *
- * @param Yoast_Form $yform The Yoast_Form object.
- * @param string     $name  The post type name.
- */
-do_action_deprecated(
-	'wpseo_admin_page_meta_post_types',
-	[ $yform, $wpseo_post_type->name ],
-	'16.3',
-	'Yoast\WP\SEO\admin_post_types_beforearchive'
-);
