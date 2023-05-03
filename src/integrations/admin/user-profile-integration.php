@@ -174,33 +174,14 @@ class User_Profile_Integration implements Integration_Interface {
 	 * @param int $user_id User ID of the updated user.
 	 */
 	public function process_user_option_update( $user_id ) {
-		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- This deprecation will be addressed later.
-		$nonce_value = \filter_input( \INPUT_POST, self::NONCE_FIELD_NAME, @\FILTER_SANITIZE_STRING );
-		if ( empty( $nonce_value ) ) {
+		// I'm keeping this to conform to the original logic.
+		if ( ! isset( $_POST[ self::NONCE_FIELD_NAME ] ) || ! \is_string( $_POST[ self::NONCE_FIELD_NAME ] ) ) {
 			return;
 		}
 
 		\check_admin_referer( self::NONCE_FIELD_ACTION, self::NONCE_FIELD_NAME );
 
 		\update_user_meta( $user_id, 'wpseo_user_schema', $this->get_posted_user_fields() );
-	}
-
-	/**
-	 * Builds the arguments for filter_var_array which makes sure we only get the fields that we've defined above.
-	 *
-	 * @return array Filter arguments.
-	 */
-	private function build_filter_args() {
-		$args = [];
-		foreach ( $this->fields as $key => $field ) {
-			if ( $field['type'] === 'group' ) {
-				continue;
-			}
-			// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- This deprecation will be addressed later.
-			$args[ $key ] = @\FILTER_SANITIZE_STRING;
-		}
-
-		return $args;
 	}
 
 	/**
@@ -211,15 +192,12 @@ class User_Profile_Integration implements Integration_Interface {
 	 * @return array The posted user fields, restricted to allowed fields.
 	 */
 	private function get_posted_user_fields() {
-		$args        = [
-			'wpseo_user_schema' => [
-				// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- This deprecation will be addressed later.
-				'filter' => @\FILTER_SANITIZE_STRING,
-				'flags'  => \FILTER_FORCE_ARRAY,
-			],
-		];
-		$user_schema = \filter_input_array( \INPUT_POST, $args )['wpseo_user_schema'];
-		$user_schema = \filter_var_array( $user_schema, $this->build_filter_args(), false );
+		$user_schema = [];
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce is verified in process_user_option_update.
+		if ( isset( $_POST['wpseo_user_schema'] ) && is_array( $_POST['wpseo_user_schema'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce is verified in process_user_option_update.
+			$user_schema = \array_map( 'sanitize_text_field', \wp_unslash( $_POST['wpseo_user_schema'] ) );
+		}
 
 		foreach ( $this->fields as $key => $object ) {
 			switch ( $object['type'] ) {
