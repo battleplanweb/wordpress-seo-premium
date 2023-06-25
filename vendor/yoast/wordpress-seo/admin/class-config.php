@@ -5,7 +5,7 @@
  * @package WPSEO\Admin
  */
 
-use Yoast\WP\SEO\Config\Schema_Types;
+use Yoast\WP\SEO\Integrations\Academy_Integration;
 use Yoast\WP\SEO\Integrations\Settings_Integration;
 
 /**
@@ -43,7 +43,7 @@ class WPSEO_Admin_Pages {
 	public function init() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reason: We are not processing form information.
 		$page = isset( $_GET['page'] ) && is_string( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '';
-		if ( $page === Settings_Integration::PAGE ) {
+		if ( $page === Settings_Integration::PAGE || $page === Academy_Integration::PAGE ) {
 			// Bail, this is managed in the Settings_Integration.
 			return;
 		}
